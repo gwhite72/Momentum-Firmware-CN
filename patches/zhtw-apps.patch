@@ -1,0 +1,302 @@
+diff --git a/ble_killer/ble_killer.c b/ble_killer/ble_killer.c
+index b55d5d2..affe0a7 100644
+--- a/ble_killer/ble_killer.c
++++ b/ble_killer/ble_killer.c
+@@ -17,6 +17,12 @@
+ 
+ #include "uart.h"
+ 
++#ifdef MOMENTUM_UI_LANG_ZH_CN
++#define BLE_KILLER_UI_TEXT(en, zh) (zh)
++#else
++#define BLE_KILLER_UI_TEXT(en, zh) (en)
++#endif
++
+ typedef enum {
+     subMenuSetup,
+     subMenuScan,
+@@ -235,7 +241,7 @@ static void view_scan_draw_callback(Canvas* canvas, void* context) {
+     UNUSED(context);
+     if(!scanEndFlag){
+         canvas_set_font(canvas, FontPrimary);
+-        canvas_draw_str(canvas, 15, 30, "Press 'OK' to scan.");
++        canvas_draw_str(canvas, 15, 30, BLE_KILLER_UI_TEXT("Press 'OK' to scan.", "按 'OK' 开始扫描"));
+         // start_blink(_ctx);
+         // notification_message(_ctx->notification, &sequence_notification);
+         
+@@ -318,8 +324,7 @@ static void view_weapon_draw_callback(Canvas* canvas, void* context) {
+                     48,
+                     AlignLeft,
+                     AlignTop,
+-                    "Press \e#OK\e# button\n"
+-                    "To \e#attack\e#",
++                    BLE_KILLER_UI_TEXT("Press \e#OK\e# button\nTo \e#attack\e#", "按 \e#OK\e# 键\n进行 \e#攻击\e#"),
+                     false);
+             elements_button_center(canvas, model->is_start ? "Stop":"Start");
+             elements_button_right(canvas, "Next");
+@@ -335,8 +340,7 @@ static void view_weapon_draw_callback(Canvas* canvas, void* context) {
+                     48,
+                     AlignLeft,
+                     AlignTop,
+-                    "Press \e#OK\e# button\n"
+-                    "To \e#attack\e#",
++                    BLE_KILLER_UI_TEXT("Press \e#OK\e# button\nTo \e#attack\e#", "按 \e#OK\e# 键\n进行 \e#攻击\e#"),
+                     false);
+             elements_button_center(canvas, model->is_start ? "Stop":"Start");
+             elements_button_left(canvas, "Pre");
+diff --git a/fm_transmitter/radio.c b/fm_transmitter/radio.c
+index 7dc3940..bda5e27 100644
+--- a/fm_transmitter/radio.c
++++ b/fm_transmitter/radio.c
+@@ -5,6 +5,12 @@
+ #include <notification/notification.h>
+ #include <notification/notification_messages.h>
+ 
++#ifdef MOMENTUM_UI_LANG_ZH_CN
++#define FM_TX_UI_TEXT(en, zh) (zh)
++#else
++#define FM_TX_UI_TEXT(en, zh) (en)
++#endif
++
+ /*
+  * KT0803L FM Transmitter FAP for Flipper Zero (Momentum firmware)
+  *
+@@ -166,18 +172,18 @@ static void fmtx_draw_callback(Canvas* canvas, void* ctx) {
+     switch(app->state.current_screen) {
+         case SCREEN_MAIN:
+             canvas_set_font(canvas, FontPrimary);
+-            canvas_draw_str_aligned(canvas, 64, 10, AlignCenter, AlignTop, "KT0803 FM TX");
++            canvas_draw_str_aligned(canvas, 64, 10, AlignCenter, AlignTop, FM_TX_UI_TEXT("KT0803 FM TX", "KT0803 FM 发射"));
+ 
+             canvas_set_font(canvas, FontSecondary);
+-            canvas_draw_str_aligned(canvas, 64, 25, AlignCenter, AlignTop, "Set frequency & transmit");
+-            canvas_draw_str_aligned(canvas, 64, 35, AlignCenter, AlignTop, "audio via I2C");
++            canvas_draw_str_aligned(canvas, 64, 25, AlignCenter, AlignTop, FM_TX_UI_TEXT("Set frequency & transmit", "设定频率并发射"));
++            canvas_draw_str_aligned(canvas, 64, 35, AlignCenter, AlignTop, FM_TX_UI_TEXT("audio via I2C", "透过 I2C 传送音讯"));
+ 
+             canvas_draw_str_aligned(canvas, 64, 50, AlignCenter, AlignTop, "[ Configure ]");
+             break;
+ 
+         case SCREEN_REGION:
+             canvas_set_font(canvas, FontPrimary);
+-            canvas_draw_str_aligned(canvas, 64, 10, AlignCenter, AlignTop, "Select Region");
++            canvas_draw_str_aligned(canvas, 64, 10, AlignCenter, AlignTop, FM_TX_UI_TEXT("Select Region", "选择地区"));
+ 
+             canvas_set_font(canvas, FontSecondary);
+             for(size_t i = 0; i < REGION_COUNT; i++) {
+@@ -195,11 +201,11 @@ static void fmtx_draw_callback(Canvas* canvas, void* ctx) {
+             char freq_text[32];
+ 
+             canvas_set_font(canvas, FontPrimary);
+-            canvas_draw_str_aligned(canvas, 64, 10, AlignCenter, AlignTop, "Set Frequency");
++            canvas_draw_str_aligned(canvas, 64, 10, AlignCenter, AlignTop, FM_TX_UI_TEXT("Set Frequency", "设定频率"));
+ 
+             canvas_set_font(canvas, FontSecondary);
+             snprintf(
+-                freq_text, sizeof(freq_text), "Freq: %.1f MHz",
++                freq_text, sizeof(freq_text), FM_TX_UI_TEXT("Freq: %.1f MHz", "频率: %.1f MHz"),
+                 (double)app->state.frequency);
+             canvas_draw_str_aligned(canvas, 64, 25, AlignCenter, AlignTop, freq_text);
+ 
+@@ -210,20 +216,20 @@ static void fmtx_draw_callback(Canvas* canvas, void* ctx) {
+                 (double)region->max_freq);
+             canvas_draw_str_aligned(canvas, 64, 35, AlignCenter, AlignTop, freq_text);
+ 
+-            canvas_draw_str(canvas, 5,  57, "L:Back");
+-            canvas_draw_str(canvas, 45, 57, "U/D:Set");
+-            canvas_draw_str(canvas, 90, 57, "OK:Next");
++            canvas_draw_str(canvas, 5,  57, FM_TX_UI_TEXT("L:Back", "L:返回"));
++            canvas_draw_str(canvas, 45, 57, FM_TX_UI_TEXT("U/D:Set", "U/D:调整"));
++            canvas_draw_str(canvas, 90, 57, FM_TX_UI_TEXT("OK:Next", "OK:下一步"));
+             break;
+         }
+ 
+         case SCREEN_INIT:
+             canvas_set_font(canvas, FontPrimary);
+-            canvas_draw_str_aligned(canvas, 64, 10, AlignCenter, AlignTop, "Init Status");
++            canvas_draw_str_aligned(canvas, 64, 10, AlignCenter, AlignTop, FM_TX_UI_TEXT("Init Status", "初始化状态"));
+ 
+             canvas_set_font(canvas, FontSecondary);
+             if(app->state.init_in_progress) {
+                 canvas_draw_str_aligned(
+-                    canvas, 64, 30, AlignCenter, AlignTop, "Initializing...");
++                    canvas, 64, 30, AlignCenter, AlignTop, FM_TX_UI_TEXT("Initializing...", "初始化中..."));
+             } else {
+                 // split status into 2 lines of 31 chars each
+                 char line1[32], line2[32];
+@@ -346,7 +352,7 @@ int32_t fmtx_i2c_init_app(void* p) {
+                 } else if(event.key == InputKeyOk && event.type == InputTypeShort) {
+                     app->state.current_screen = SCREEN_INIT;
+                     strncpy(
+-                        app->state.init_status, "Press OK to start",
++                        app->state.init_status, FM_TX_UI_TEXT("Press OK to start", "按 OK 开始"),
+                         sizeof(app->state.init_status) - 1);
+                 }
+                 break;
+@@ -357,7 +363,7 @@ int32_t fmtx_i2c_init_app(void* p) {
+                     float    freq     = app->state.frequency;
+                     size_t   reg_idx  = app->state.region_index;
+                     app->state.init_in_progress = true;
+-                    strncpy(app->state.init_status, "Scanning I2C...",
++                    strncpy(app->state.init_status, FM_TX_UI_TEXT("Scanning I2C...", "扫描 I2C 中..."),
+                             sizeof(app->state.init_status) - 1);
+ 
+                     furi_mutex_release(app->state_mutex);
+@@ -369,7 +375,7 @@ int32_t fmtx_i2c_init_app(void* p) {
+                         if(furi_mutex_acquire(app->state_mutex, FuriWaitForever) == FuriStatusOk) {
+                             strncpy(
+                                 app->state.init_status,
+-                                "No KT0803 found!Connect module (SCL/SDA)",
++                                FM_TX_UI_TEXT("No KT0803 found!Connect module (SCL/SDA)", "找不到 KT0803!请接模组 (SCL/SDA)"),
+                                 sizeof(app->state.init_status) - 1);
+                             app->state.init_in_progress = false;
+                             furi_mutex_release(app->state_mutex);
+@@ -387,7 +393,7 @@ int32_t fmtx_i2c_init_app(void* p) {
+                                 snprintf(
+                                     app->state.init_status,
+                                     sizeof(app->state.init_status),
+-                                    "OK! %.1f MHz (%s)",
++                                    FM_TX_UI_TEXT("OK! %.1f MHz (%s)", "成功! %.1f MHz (%s)"),
+                                     (double)freq,
+                                     regions[reg_idx].name);
+                                 notification_message(
+@@ -395,7 +401,7 @@ int32_t fmtx_i2c_init_app(void* p) {
+                             } else {
+                                 strncpy(
+                                     app->state.init_status,
+-                                    "I2C write failed!Check wiring",
++                                    FM_TX_UI_TEXT("I2C write failed!Check wiring", "I2C 写入失败!请检查接线"),
+                                     sizeof(app->state.init_status) - 1);
+                                 notification_message(app->notifications, &sequence_error);
+                             }
+diff --git a/radar_scanner/radar_scanner.c b/radar_scanner/radar_scanner.c
+index 388c530..e42990b 100644
+--- a/radar_scanner/radar_scanner.c
++++ b/radar_scanner/radar_scanner.c
+@@ -6,6 +6,12 @@
+ #include <notification/notification_messages.h>
+ #include <gui/elements.h>
+ 
++#ifdef MOMENTUM_UI_LANG_ZH_CN
++#define RADAR_UI_TEXT(en, zh) (zh)
++#else
++#define RADAR_UI_TEXT(en, zh) (en)
++#endif
++
+ static const uint32_t EVENT_PERIOD_MS = 10;
+ static const float BEEP_FREQ = 1000.0f;
+ static const float BEEP_VOL = 0.9f;
+@@ -53,38 +59,38 @@ static void draw_callback(Canvas* canvas, void* ctx) {
+ 
+     canvas_clear(canvas);
+     canvas_set_font(canvas, FontPrimary);
+-    elements_multiline_text_aligned(canvas, 64, 2, AlignCenter, AlignTop, "Microwave Radar");
++    elements_multiline_text_aligned(canvas, 64, 2, AlignCenter, AlignTop, RADAR_UI_TEXT("Microwave Radar", "微波雷达"));
+     canvas_set_font(canvas, FontSecondary);
+     if(active) {
+-        elements_multiline_text_aligned(canvas, 64, 12, AlignCenter, AlignTop, "Active");
++        elements_multiline_text_aligned(canvas, 64, 12, AlignCenter, AlignTop, RADAR_UI_TEXT("Active", "启用中"));
+     } else {
+-        elements_multiline_text_aligned(canvas, 64, 12, AlignCenter, AlignTop, "On Standby");
++        elements_multiline_text_aligned(canvas, 64, 12, AlignCenter, AlignTop, RADAR_UI_TEXT("On Standby", "待命中"));
+     }
+ 
+     // Display presence status
+     canvas_set_font(canvas, FontPrimary);
+     if(presenceDetected) {
+         elements_multiline_text_aligned(
+-            canvas, 64, 20, AlignCenter, AlignTop, "Presence Detected");
++            canvas, 64, 20, AlignCenter, AlignTop, RADAR_UI_TEXT("Presence Detected", "侦测到物体"));
+     } else {
+-        elements_multiline_text_aligned(canvas, 64, 20, AlignCenter, AlignTop, "No Presence");
++        elements_multiline_text_aligned(canvas, 64, 20, AlignCenter, AlignTop, RADAR_UI_TEXT("No Presence", "无物体"));
+     }
+ 
+     canvas_set_font(canvas, FontSecondary);
+     if(muted) {
+-        elements_multiline_text_aligned(canvas, 64, 32, AlignCenter, AlignTop, "Muted");
++        elements_multiline_text_aligned(canvas, 64, 32, AlignCenter, AlignTop, RADAR_UI_TEXT("Muted", "静音"));
+     }
+ 
+ #ifdef FW_ORIGIN_Official
+     canvas_set_font(canvas, FontKeyboard);
+     if(altPinout) {
+         elements_multiline_text_aligned(
+-            canvas, 64, 42, AlignCenter, AlignTop, "Alt-PinoutEnabled");
++            canvas, 64, 42, AlignCenter, AlignTop, RADAR_UI_TEXT("Alt-PinoutEnabled", "替代接脚已启用"));
+         elements_multiline_text_aligned(canvas, 64, 49, AlignCenter, AlignTop, "GND -> Pin 3");
+         elements_multiline_text_aligned(canvas, 64, 56, AlignCenter, AlignTop, "OUT -> Pin 2(A7)");
+     } else if(!altPinout) {
+         elements_multiline_text_aligned(
+-            canvas, 64, 42, AlignCenter, AlignTop, "Alt-PinoutDisabled");
++            canvas, 64, 42, AlignCenter, AlignTop, RADAR_UI_TEXT("Alt-PinoutDisabled", "替代接脚已停用"));
+         elements_multiline_text_aligned(canvas, 64, 49, AlignCenter, AlignTop, "GND -> GND");
+         elements_multiline_text_aligned(canvas, 64, 56, AlignCenter, AlignTop, "OUT -> Pin 7(C3)");
+     }
+@@ -92,14 +98,14 @@ static void draw_callback(Canvas* canvas, void* ctx) {
+     canvas_set_font(canvas, FontBatteryPercent);
+     if(altPinout) {
+         elements_multiline_text_aligned(
+-            canvas, 64, 42, AlignCenter, AlignTop, "Alt-Pinout Enabled");
++            canvas, 64, 42, AlignCenter, AlignTop, RADAR_UI_TEXT("Alt-Pinout Enabled", "替代接脚 已启用"));
+         elements_multiline_text_aligned(
+             canvas, 64, 49, AlignCenter, AlignTop, "VIN -> 5v :: GND -> Pin 3");
+         elements_multiline_text_aligned(
+             canvas, 64, 56, AlignCenter, AlignTop, "OUT -> Pin 2 (A7)");
+     } else if(!altPinout) {
+         elements_multiline_text_aligned(
+-            canvas, 64, 42, AlignCenter, AlignTop, "Alt-Pinout Disabled");
++            canvas, 64, 42, AlignCenter, AlignTop, RADAR_UI_TEXT("Alt-Pinout Disabled", "替代接脚 已停用"));
+         elements_multiline_text_aligned(
+             canvas, 64, 49, AlignCenter, AlignTop, "VIN -> 5v :: GND -> GND");
+         elements_multiline_text_aligned(
+diff --git a/yatzee/yatzee.c b/yatzee/yatzee.c
+index 1d2223b..5680c6c 100644
+--- a/yatzee/yatzee.c
++++ b/yatzee/yatzee.c
+@@ -402,11 +402,11 @@ static void app_draw_callback(Canvas* canvas, void* ctx) {
+     // if new_game, show user instructions
+     if (new_game) {
+       canvas_set_font(canvas, FontPrimary);
+-      elements_multiline_text_aligned(canvas, 64,0, AlignCenter, AlignTop, "Yatzee!");
++      elements_multiline_text_aligned(canvas, 64,0, AlignCenter, AlignTop, YATZEE_UI_TEXT("Yatzee!", "快艇骰子!"));
+       canvas_set_font(canvas, FontSecondary);
+-      snprintf(bigbuffer, sizeof(bigbuffer), "Up: Roll\nLeft/Right: Move cursor\nOK: Hold Die\nDown: Score");
++      snprintf(bigbuffer, sizeof(bigbuffer), YATZEE_UI_TEXT("Up: Roll\nLeft/Right: Move cursor\nOK: Hold Die\nDown: Score", "上:掷骰\n左/右:移动游标\nOK:保留骰子\n下:计分"));
+       elements_multiline_text_aligned(canvas, 0, 8, AlignLeft, AlignTop, bigbuffer);
+-      elements_button_center(canvas, "Start!");
++      elements_button_center(canvas, YATZEE_UI_TEXT("Start!", "开始!"));
+       return;
+ 
+ 
+@@ -520,17 +520,17 @@ static void app_draw_callback(Canvas* canvas, void* ctx) {
+ 
+       // sub score shows the 1-6 scores only. If this is >63 at the end of the game,
+       // a 35 point bonus is added to the total score
+-      snprintf(buffer, sizeof(buffer), "Sub\n%u", upperScore);
++      snprintf(buffer, sizeof(buffer), YATZEE_UI_TEXT("Sub\n%u", "小计\n%u"), upperScore);
+       elements_multiline_text_aligned(canvas, 117, 0, AlignCenter, AlignTop, buffer);
+ 
+-      snprintf(buffer, sizeof(buffer), "Total\n%ld", totalScore);
++      snprintf(buffer, sizeof(buffer), YATZEE_UI_TEXT("Total\n%ld", "总分\n%ld"), totalScore);
+       elements_multiline_text_aligned(canvas, 117, 22, AlignCenter, AlignTop, buffer);
+ 
+       if (totalrolls == 0) {
+-          snprintf(buffer, sizeof(buffer), "Roll\n%s", " ");
++          snprintf(buffer, sizeof(buffer), YATZEE_UI_TEXT("Roll\n%s", "掷骰\n%s"), " ");
+           elements_multiline_text_aligned(canvas, 117, 64, AlignCenter, AlignBottom, buffer);
+       } else {
+-          snprintf(buffer, sizeof(buffer), "Roll\n%u", totalrolls);
++          snprintf(buffer, sizeof(buffer), YATZEE_UI_TEXT("Roll\n%u", "掷骰\n%u"), totalrolls);
+           elements_multiline_text_aligned(canvas, 117, 64, AlignCenter, AlignBottom, buffer);
+       }
+ 
+@@ -559,7 +559,7 @@ static void app_draw_callback(Canvas* canvas, void* ctx) {
+           }
+           // set game over to true and tell the user the game is over
+           game_over = true;
+-          elements_button_center(canvas, "Game Over");
++          elements_button_center(canvas, YATZEE_UI_TEXT("Game Over", "游戏结束"));
+     }
+   }
+ }

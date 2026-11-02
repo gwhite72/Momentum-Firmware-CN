@@ -81,6 +81,13 @@ jobs:
       - name: "Prepare bdfconv"
         run: chmod +x tools/u8g2_cn_tools/bdfconv
 
+      - name: "Apply external-app translations"
+        run: |
+          set -euo pipefail
+          if [ -f patches/zhtw-apps.patch ]; then
+            ( cd applications/external && patch -p1 --forward < "${GITHUB_WORKSPACE}/patches/zhtw-apps.patch" )
+          fi
+
       - name: "Convert source to Traditional Chinese (s2tw)"
         run: python3 scripts/zh_tw_convert/convert_tree.py
 
