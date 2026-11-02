@@ -1,0 +1,142 @@
+name: "Release zh-TW"
+
+on:
+  push:
+    tags:
+      - "zh-tw-*"
+  workflow_dispatch:
+
+env:
+  DEFAULT_TARGET: f7
+  FBT_GIT_SUBMODULE_SHALLOW: 1
+  FBT_TOOLCHAIN_CACHE_KEY: flipper-toolchain-v39-linux
+
+jobs:
+  prepare-tools:
+    name: "Prepare release tools"
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Checkout code"
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+
+      - name: "Build Linux bdfconv"
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y build-essential
+          git clone --depth 1 https://github.com/olikraus/u8g2.git /tmp/u8g2
+          make -C /tmp/u8g2/tools/font/bdfconv
+          mkdir -p release-tools
+          cp /tmp/u8g2/tools/font/bdfconv/bdfconv release-tools/bdfconv
+          chmod +x release-tools/bdfconv
+
+      - name: "Upload release tools"
+        uses: actions/upload-artifact@v6
+        with:
+          name: build-tools-bdfconv
+          path: release-tools/bdfconv
+
+  build-firmware:
+    name: "Build ${{ matrix.profile }} (zh-TW)"
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    needs: prepare-tools
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - profile: real
+            label: original
+            display: 原版
+          - profile: clone
+            label: clone
+            display: 複刻版
+          - profile: clipper
+            label: clipper
+            display: Clipper
+    steps:
+      - name: "Checkout code"
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+          submodules: recursive
+
+      - name: "Restore toolchain cache"
+        uses: actions/cache@v5
+        with:
+          path: toolchain
+          key: ${{ env.FBT_TOOLCHAIN_CACHE_KEY }}
+
+      - name: "Download release tools"
+        uses: actions/download-artifact@v8
+        with:
+          name: build-tools-bdfconv
+          path: tools/u8g2_cn_tools
+
+      - name: "Prepare bdfconv"
+        run: chmod +x tools/u8g2_cn_tools/bdfconv
+
+      - name: "Convert source to Traditional Chinese (s2tw)"
+        run: python3 scripts/zh_tw_convert/convert_tree.py
+
+      - name: "Build updater package"
+        run: |
+          FBT_NO_SYNC=1 \
+          MOMENTUM_UI_LANG=zh_CN \
+          MOMENTUM_DEVICE=${{ matrix.profile }} \
+          ./fbt COMPACT=1 DEBUG=0 updater_package
+
+      - name: "Package release assets"
+        run: |
+          set -euo pipefail
+          if [[ "${GITHUB_EVENT_NAME}" == "push" && "${GITHUB_REF}" == refs/tags/* ]]; then
+            TAG="${GITHUB_REF_NAME}"
+          else
+            TAG="manual-${GITHUB_RUN_NUMBER}"
+          fi
+          PROFILE="${{ matrix.label }}"
+          UPDATE_DIR="$(find dist/f7-C -maxdepth 1 -type d -name 'f7-update-*' | head -n1)"
+          FULL_DFU="$(find dist/f7-C -maxdepth 1 -type f -name 'flipper-z-f7-full-*.dfu' | head -n1)"
+          mkdir -p release-assets
+          zip -qr "release-assets/momentum-zh-TW-${TAG}-${PROFILE}.zip" "${UPDATE_DIR}"
+          tar czf "release-assets/momentum-zh-TW-${TAG}-${PROFILE}.tgz" -C "$(dirname "${UPDATE_DIR}")" "$(basename "${UPDATE_DIR}")"
+          cp "${FULL_DFU}" "release-assets/momentum-zh-TW-${TAG}-${PROFILE}.dfu"
+
+      - name: "Upload packaged assets"
+        uses: actions/upload-artifact@v6
+        with:
+          name: release-${{ matrix.label }}
+          path: release-assets/*
+
+  release:
+    name: "Create GitHub Release"
+    if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/') }}
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    needs:
+      - build-firmware
+    steps:
+      - name: "Download all release artifacts"
+        uses: actions/download-artifact@v8
+        with:
+          path: release-assets
+          pattern: release-*
+          merge-multiple: true
+
+      - name: "Create release with assets"
+        uses: softprops/action-gh-release@v3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+          body: |
+            Momentum 繁體中文（zh-TW）韌體自動建置。
+            包含原版 / 複刻版 / Clipper 三種機型的 updater 封包（.tgz / .zip）與完整 .dfu。
+          files: release-assets/*
